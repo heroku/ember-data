@@ -1,3 +1,4 @@
+import { guidFor } from '@ember/object/internals';
 import {createStore} from 'dummy/tests/helpers/store';
 import setupStore from 'dummy/tests/helpers/store';
 import Ember from 'ember';
@@ -21,6 +22,7 @@ module('unit/model - DS.Model', {
       name: DS.attr('string'),
       isDrugAddict: DS.attr('boolean')
     });
+    Person.toString =  () => 'person';
 
     env = setupStore({
       person: Person
@@ -200,8 +202,9 @@ test("a record's id is included in its toString representation", function(assert
         id: '1'
       }
     });
-    store.findRecord('person', 1).then(function(record) {
-      assert.equal(record.toString(), '<(subclass of DS.Model):'+Ember.guidFor(record)+':1>', "reports id in toString");
+
+    return store.findRecord('person', 1).then(record => {
+      assert.equal(record.toString(), `<person:${guidFor(record)}:1>`, 'reports id in toString');
     });
   });
 });
