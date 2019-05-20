@@ -102,15 +102,17 @@ export const PromiseBelongsTo = PromiseObject.extend({
       'You are trying to reload an async belongsTo before it has been created',
       this.get('content') !== undefined
     );
-    let state = this.get('_belongsToState');
-    let key = state.key;
-    let store = state.store;
-    let resource = state.recordData.getResourceIdentifier();
-    let internalModel = store._internalModelForResource(resource);
+    let { key, store, originatingInternalModel } = this._belongsToState;
 
-    return store.reloadBelongsTo(this, internalModel, key, options).then(() => this);
+    return store.reloadBelongsTo(this, originatingInternalModel, key, options).then(() => this);
   },
 });
+
+export function proxyToContent(method) {
+  return function() {
+    return get(this, 'content')[method](...arguments);
+  };
+}
 
 /**
   A PromiseManyArray is a PromiseArray that also proxies certain method calls
@@ -129,12 +131,6 @@ export const PromiseBelongsTo = PromiseObject.extend({
   @namespace DS
   @extends Ember.ArrayProxy
 */
-
-export function proxyToContent(method) {
-  return function() {
-    return get(this, 'content')[method](...arguments);
-  };
-}
 
 export const PromiseManyArray = PromiseArray.extend({
   reload(options) {

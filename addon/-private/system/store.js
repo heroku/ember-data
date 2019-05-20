@@ -1373,12 +1373,14 @@ const Store = Service.extend({
       hasDematerializedInverse,
       hasAnyRelationshipData,
       relationshipIsEmpty,
+      shouldForceReload,
     } = resource._relationship;
 
     let shouldFindViaLink =
       resource.links &&
       resource.links.related &&
-      (hasDematerializedInverse ||
+      (shouldForceReload ||
+        hasDematerializedInverse ||
         relationshipIsStale ||
         (!allInverseRecordsAreLoaded && !relationshipIsEmpty));
 
@@ -1406,7 +1408,7 @@ const Store = Service.extend({
       (relationshipIsEmpty && Array.isArray(resource.data) && resource.data.length > 0);
 
     // fetch using data, pulling from local cache if possible
-    if (!relationshipIsStale && (preferLocalCache || hasLocalPartialData)) {
+    if (!shouldForceReload && !relationshipIsStale && (preferLocalCache || hasLocalPartialData)) {
       let internalModels = resource.data.map(json => this._internalModelForResource(json));
 
       return this.findMany(internalModels, options);
@@ -1495,12 +1497,14 @@ const Store = Service.extend({
       hasDematerializedInverse,
       hasAnyRelationshipData,
       relationshipIsEmpty,
+      shouldForceReload,
     } = resource._relationship;
 
     let shouldFindViaLink =
       resource.links &&
       resource.links.related &&
-      (hasDematerializedInverse ||
+      (shouldForceReload ||
+        hasDematerializedInverse ||
         relationshipIsStale ||
         (!allInverseRecordsAreLoaded && !relationshipIsEmpty));
 
@@ -1528,7 +1532,7 @@ const Store = Service.extend({
     let localDataIsEmpty = resource.data === undefined || resource.data === null;
 
     // fetch using data, pulling from local cache if possible
-    if (!relationshipIsStale && (preferLocalCache || hasLocalPartialData)) {
+    if (!shouldForceReload && !relationshipIsStale && (preferLocalCache || hasLocalPartialData)) {
       /*
         We have canonical data, but our local state is empty
        */
