@@ -72,7 +72,7 @@ class TestAdapter extends JSONAPIAdapter {
   }
 
   // find by link
-  findHasMany() {
+  findBelongsTo() {
     return this._nextPayload();
   }
 
@@ -168,6 +168,19 @@ function makePeopleWithRelationshipData() {
           data: {
             type: 'person',
             id: '3:has-2-children-and-parent',
+          },
+        },
+      },
+    },
+    {
+      type: 'person',
+      id: '6:has-linked-parent',
+      attributes: { name: 'Has a linked Parent' },
+      relationships: {
+        children: { data: [] },
+        parent: {
+          links: {
+            related: '/person/7',
           },
         },
       },
@@ -462,6 +475,32 @@ module('async belongs-to rendering tests', function(hooks) {
       }
 
       Ember.onerror = originalOnError;
+    });
+
+    test('accessing a linked async belongs-to whose fetch fails does not error for null proxy content', async function(assert) {
+      assert.expect(2);
+      let people = makePeopleWithRelationshipData();
+      let sedona = store.push({
+        data: people.dict['6:has-linked-parent'],
+      });
+
+      adapter.setupPayloads(assert, [
+        new ServerError([], 'hard error while finding <person>7:does-not-exist'),
+      ]);
+
+      try {
+        await sedona.get('parent');
+        assert.ok(false, `Should throw an error`);
+      } catch (e) {
+        assert.ok(true, `Accessing resulted in expected promise error: ${e.message}`);
+      }
+
+      try {
+        let result = await sedona.get('parent');
+        assert.equal(result, null, 'When re-accessing the result should be null with no error');
+      } catch (e) {
+        assert.ok(false, `Re-accessing resulted in unexpected promise error: ${e.message}`);
+      }
     });
   });
 });
